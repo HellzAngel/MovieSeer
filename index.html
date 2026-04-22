@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -146,9 +146,23 @@
     .hero h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: clamp(2.8rem, 8vw, 7rem); font-weight: 900; line-height: 1.05;
-      background: linear-gradient(135deg, #fff 0%, var(--neon-gold) 35%, var(--neon-pink) 70%, var(--neon-purple) 100%);
+      background: linear-gradient(90deg,
+        #fff 0%,
+        var(--neon-gold) 15%,
+        var(--neon-orange) 28%,
+        var(--neon-pink) 42%,
+        var(--neon-purple) 55%,
+        var(--neon-blue) 68%,
+        var(--neon-gold) 80%,
+        #fff 100%);
+      background-size: 250% auto;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      animation: fadeDown .9s ease .1s both;
+      background-clip: text;
+      animation: fadeDown .9s ease .1s both, heroColorFlow 4s linear 1s infinite;
+    }
+    @keyframes heroColorFlow {
+      0%   { background-position: 0% center; }
+      100% { background-position: 250% center; }
     }
     .hero-sub {
       margin-top: 16px; max-width: 580px;
@@ -1333,7 +1347,7 @@ let activeRegionalLang = 'ta';
 
 async function loadRegional(lang) {
   if (allRegional[lang]) { renderRegionalGrid(lang); return; }
-  if (!TMDB_KEY || TMDB_KEY === PLACEHOLDER) {
+  if (!TMDB_BEARER) {
     const filtered = DEMO_MOVIES.filter(m => m.original_language === lang);
     allRegional[lang] = filtered.length ? filtered : DEMO_MOVIES.slice(0, 6);
     renderRegionalGrid(lang);
@@ -1450,10 +1464,10 @@ document.getElementById('regional-tabs').addEventListener('click', e => {
 //  Movie embed providers (TMDB ID → iframe embed)
 // ═══════════════════════════════════════════════════════
 const STREAM_SOURCES = [
-  { name: 'EmbedSU',    url: id => `https://embed.su/embed/movie/${id}` },
-  { name: 'MultiEmbed', url: id => `https://multiembed.mov/?video_id=${id}&tmdb=1` },
-  { name: 'AutoEmbed',  url: id => `https://player.autoembed.cc/embed/movie/${id}` },
-  { name: 'VidSrc',     url: id => `https://vidsrc.xyz/embed/movie?tmdb=${id}` },
+  { name: '2Embed',      url: id => `https://www.2embed.cc/embed/${id}` },
+  { name: 'VidSrc.xyz',  url: id => `https://vidsrc.xyz/embed/movie?tmdb=${id}` },
+  { name: 'MultiEmbed',  url: id => `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1` },
+  { name: 'EmbedSU',     url: id => `https://embed.su/embed/movie/${id}` },
 ];
 
 const playerModal = document.getElementById('player-modal');
@@ -1492,7 +1506,7 @@ function renderStreamEmbed() {
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
       allowfullscreen
       referrerpolicy="no-referrer"
-      sandbox="allow-scripts allow-same-origin allow-presentation allow-pointer-lock"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-pointer-lock allow-popups-to-escape-sandbox"
       style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;"
     ></iframe>`;
 }
@@ -1628,12 +1642,6 @@ function loadDemoData() {
   const LANG_MAP = { hi:'Hindi', ta:'Tamil', te:'Telugu', ml:'Malayalam', kn:'Kannada', pa:'Punjabi', bn:'Bengali' };
   const hindi  = DEMO_MOVIES.filter(m => m.original_language === 'hi');
   const sorted = [...DEMO_MOVIES].sort((a, b) => b.vote_average - a.vote_average);
-
-  // Pre-fill regional cache so tab switching works offline
-  ['ta','te','ml','kn','pa','bn'].forEach(lang => {
-    const f = DEMO_MOVIES.filter(m => m.original_language === lang);
-    if (f.length) allRegional[lang] = f;
-  });
 
   // Featured banner
   const feat = DEMO_MOVIES[2]; // Dangal
