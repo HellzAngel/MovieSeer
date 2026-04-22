@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StreamSeer — Indian Cinema</title>
+  <title>MovieSeer — Indian Cinema</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
 
@@ -579,8 +579,14 @@
     .modal-skeleton-line { height: 14px; border-radius: 4px; margin-bottom: 8px; }
 
     @media (max-width: 900px) {
-      .modal-inner { grid-template-columns: 1fr; max-height: 94vh; }
+      .modal-inner {
+        grid-template-columns: 1fr;
+        max-height: 96vh;
+        width: 98vw;
+        border-radius: 12px;
+      }
       .modal-info { display: none; }
+      .modal-video-wrap { aspect-ratio: 16/9; }
     }
 
     /* ── Animations ── */
@@ -592,12 +598,142 @@
     .reveal { opacity:0; transform:translateY(40px); transition:opacity .7s ease, transform .7s ease; }
     .reveal.visible { opacity:1; transform:translateY(0); }
 
+    /* ════════════════════════════════════════
+       RESPONSIVE — TABLET (≤900px)
+    ════════════════════════════════════════ */
     @media (max-width: 900px) {
-      nav { padding: 14px 20px; }
-      .nav-links, .nav-search { display: none; }
-      section, #search-section { padding: 60px 20px; }
+      /* Nav */
+      nav { padding: 12px 18px; gap: 10px; }
+      .nav-links, .nav-cta { display: none; }
+      .nav-search input { width: 130px; }
+
+      /* Sections */
+      section, #search-section { padding: 56px 20px; }
+
+      /* Hero */
+      .hero { padding: 120px 20px 50px; }
+      .hero h1 { font-size: clamp(2rem, 10vw, 3.2rem); }
+      .hero-sub { font-size: 1rem; }
+      .hero-actions { gap: 12px; }
+      .btn-primary, .btn-outline { padding: 12px 22px; font-size: .75rem; }
+
+      /* Featured */
       .featured-banner { grid-template-columns: 1fr; }
-      .featured-art { min-height: 220px; }
+      .featured-art { min-height: 200px; }
+      .featured-content { padding: 28px 24px; }
+      .featured-content h2 { font-size: 1.3rem; }
+      .featured-stats { gap: 18px; }
+
+      /* Cards */
+      .movie-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+
+      /* Tabs */
+      .tabs { gap: 8px; }
+      .tab-btn { padding: 7px 14px; font-size: .8rem; }
+
+      /* Genre grid */
+      .cat-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+
+      /* Footer */
+      footer { padding: 36px 20px; }
+      .footer-links { flex-wrap: wrap; gap: 14px; }
+    }
+
+    /* ════════════════════════════════════════
+       RESPONSIVE — MOBILE (≤600px)
+    ════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      /* Disable custom cursor on touch */
+      #cursor, #cursor-dot { display: none; }
+      body { cursor: auto; }
+
+      /* Setup banner */
+      #setup-banner { padding: 8px 14px; gap: 8px; font-size: .78rem; }
+      #setup-banner input { width: 100%; }
+      #setup-banner button { width: 100%; padding: 8px; }
+
+      /* Nav */
+      nav { padding: 10px 16px; }
+      .logo { font-size: 1.15rem; letter-spacing: 2px; }
+      .nav-search { padding: 7px 10px; }
+      .nav-search input { width: 100px; font-size: .85rem; }
+
+      /* Hero */
+      .hero { padding: 100px 16px 40px; }
+      .hero-badge { font-size: .68rem; padding: 5px 14px; }
+      .hero h1 { font-size: clamp(1.8rem, 12vw, 2.6rem); }
+      .hero-sub { font-size: .9rem; }
+      .hero-actions { flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+      .btn-primary, .btn-outline { width: 100%; max-width: 280px; text-align: center; padding: 13px; }
+      .scroll-hint { margin-top: 32px; }
+
+      /* Marquee */
+      .marquee-item { font-size: .72rem; gap: 8px; }
+
+      /* Sections */
+      section, #search-section { padding: 44px 14px; }
+      .section-head h2 { font-size: 1.4rem; }
+      .section-head p { font-size: .88rem; }
+
+      /* Featured */
+      .featured-banner { border-radius: 10px; }
+      .featured-art { min-height: 160px; }
+      .featured-content { padding: 20px 16px; }
+      .featured-content h2 { font-size: 1.1rem; }
+      .featured-tag { font-size: .62rem; }
+      .featured-desc { font-size: .85rem; -webkit-line-clamp: 3; }
+      .featured-stats { gap: 14px; }
+      .stat-val { font-size: 1.1rem; }
+      .stat-lbl { font-size: .6rem; }
+      .featured-actions { flex-direction: column; gap: 8px; }
+      .featured-actions .btn-primary,
+      .featured-actions .btn-outline { padding: 11px 20px; font-size: .72rem; }
+
+      /* Movie grid */
+      .movie-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .card-info h3 { font-size: .82rem; }
+      .card-meta span { font-size: .65rem; }
+      .cf-title { font-size: .7rem; }
+
+      /* Tabs */
+      .tabs { gap: 6px; padding: 0 2px; }
+      .tab-btn { padding: 6px 12px; font-size: .72rem; }
+
+      /* Genre grid */
+      .cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .cat-card { padding: 14px 8px; }
+      .cat-icon { font-size: 1.4rem; margin-bottom: 6px; }
+      .cat-card h3 { font-size: .72rem; }
+      .cat-card p { display: none; }
+
+      /* Player modal */
+      .modal-inner {
+        width: 100vw; height: 100dvh; max-height: 100dvh;
+        border-radius: 0; margin: 0;
+        grid-template-columns: 1fr;
+      }
+      .modal-info { display: none; }
+      .modal-left-col { height: 100%; }
+      .modal-video-wrap { aspect-ratio: 16/9; max-height: 56vw; }
+      .ptab { font-size: .62rem; padding: 10px 0; letter-spacing: 1px; }
+      .src-strip { padding: 8px 10px; gap: 6px; }
+      .src-btn { padding: 4px 9px; font-size: .6rem; }
+      .src-strip-label { display: none; }
+      .modal-close { top: 8px; right: 8px; width: 30px; height: 30px; font-size: .9rem; }
+
+      /* Footer */
+      footer { padding: 28px 16px; }
+      .footer-links { gap: 12px; }
+    }
+
+    /* ════════════════════════════════════════
+       RESPONSIVE — SMALL PHONES (≤380px)
+    ════════════════════════════════════════ */
+    @media (max-width: 380px) {
+      .movie-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+      .cat-grid { grid-template-columns: repeat(4, 1fr); }
+      .nav-search input { width: 80px; }
+      .hero h1 { font-size: 1.7rem; }
     }
   </style>
 </head>
@@ -620,7 +756,7 @@
 
   <!-- ── NAV ── -->
   <nav id="main-nav" class="with-banner">
-    <a class="logo" href="#">STREAMSEER</a>
+    <a class="logo" href="#">MOVIESEER</a>
     <ul class="nav-links">
       <li><a href="#trending">Trending</a></li>
       <li><a href="#bollywood">Bollywood</a></li>
@@ -762,8 +898,8 @@
 
   <!-- ── FOOTER ── -->
   <footer>
-    <div class="footer-logo">STREAMSEER</div>
-    <p>© 2026 StreamSeer — Indian Cinema, Reimagined.</p>
+    <div class="footer-logo">MOVIESEER</div>
+    <p>© 2026 MovieSeer — Indian Cinema, Reimagined.</p>
     <div class="footer-links">
       <a href="#">About</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
     </div>
