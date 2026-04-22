@@ -809,6 +809,299 @@
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════════
+     LOGIN OVERLAY
+══════════════════════════════════════════════════ -->
+<style>
+  #login-overlay {
+    position: fixed; inset: 0; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    background: #050510;
+    transition: opacity .6s ease;
+  }
+  #login-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: block;
+  }
+  /* vignette over the canvas */
+  #login-overlay::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 30%,
+      rgba(5,5,16,.65) 70%,
+      rgba(5,5,16,.92) 100%);
+    pointer-events: none; z-index: 1;
+  }
+  #login-overlay.hide { opacity: 0; pointer-events: none; }
+  .login-box {
+    position: relative; z-index: 2;
+    width: min(420px, 92vw);
+    background: rgba(8,5,20,.82);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(245,158,11,.28);
+    border-radius: 20px;
+    padding: 44px 40px 36px;
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+    box-shadow: 0 0 60px rgba(245,158,11,.1), 0 0 0 1px rgba(245,158,11,.05) inset,
+                0 30px 80px rgba(0,0,0,.7);
+    animation: loginPop .55s cubic-bezier(.175,.885,.32,1.275) both;
+  }
+  @keyframes loginPop {
+    from { transform: scale(.88) translateY(30px); opacity: 0; }
+    to   { transform: scale(1)   translateY(0);    opacity: 1; }
+  }
+  .login-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem; font-weight: 900; letter-spacing: 4px;
+    background: linear-gradient(135deg, #f59e0b, #f97316, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .login-tagline {
+    font-size: .68rem; color: #334155;
+    font-family: 'Orbitron', sans-serif; letter-spacing: 3px;
+    margin-top: -14px; text-transform: uppercase;
+  }
+  .login-divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,158,11,.3), transparent);
+    margin: -6px 0;
+  }
+  .login-field {
+    width: 100%; display: flex; flex-direction: column; gap: 6px;
+  }
+  .login-field label {
+    font-family: 'Orbitron', sans-serif; font-size: .58rem;
+    letter-spacing: 2.5px; color: #475569; text-transform: uppercase;
+  }
+  .login-field input {
+    width: 100%; padding: 13px 16px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(245,158,11,.18); border-radius: 10px;
+    color: #f1f5f9; font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .login-field input:focus {
+    border-color: var(--neon-gold);
+    box-shadow: 0 0 0 3px rgba(245,158,11,.1);
+  }
+  .login-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border: none; border-radius: 10px;
+    font-family: 'Orbitron', sans-serif; font-size: .75rem;
+    font-weight: 700; letter-spacing: 2.5px; color: #000;
+    cursor: pointer; transition: opacity .2s, transform .1s, box-shadow .2s;
+  }
+  .login-btn:hover { opacity: .9; box-shadow: 0 0 28px rgba(245,158,11,.4); }
+  .login-btn:active { transform: scale(.97); }
+  .login-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  .login-error {
+    width: 100%; padding: 10px 14px;
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+    border-radius: 8px; color: #f87171;
+    font-size: .82rem; text-align: center; display: none;
+  }
+  .login-error.show { display: block; }
+  @keyframes loginShake {
+    0%,100% { transform: translateX(0); }
+    20%     { transform: translateX(-8px); }
+    40%     { transform: translateX(8px); }
+    60%     { transform: translateX(-6px); }
+    80%     { transform: translateX(6px); }
+  }
+  .login-box.shake { animation: loginShake .4s ease both; }
+  .login-eye { position: relative; }
+  .login-eye input { padding-right: 42px; }
+  .login-eye-toggle {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: #475569; font-size: 1rem; padding: 4px;
+    transition: color .2s;
+  }
+  .login-eye-toggle:hover { color: var(--neon-gold); }
+  @media (max-width: 480px) {
+    .login-box { padding: 32px 22px 28px; gap: 18px; }
+    .login-logo { font-size: 1.2rem; }
+  }
+</style>
+
+<div id="login-overlay">
+  <canvas id="login-canvas"></canvas>
+  <div class="login-box" id="login-box">
+    <div class="login-logo">MOVIESEER</div>
+    <div class="login-tagline">Members Only</div>
+    <div class="login-divider"></div>
+    <div class="login-field">
+      <label for="l-user">Username</label>
+      <input id="l-user" type="text" autocomplete="username" placeholder="Enter username" />
+    </div>
+    <div class="login-field">
+      <label for="l-pass">Password</label>
+      <div class="login-eye">
+        <input id="l-pass" type="password" autocomplete="current-password" placeholder="Enter password" />
+        <button class="login-eye-toggle" type="button" onclick="togglePw()" id="pw-eye" aria-label="Show password">👁</button>
+      </div>
+    </div>
+    <div class="login-error" id="login-error">Incorrect username or password.</div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">SIGN IN</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const H_USER = 'f93c52bd7b4e4e9d4864341ab9fe5995a993120fe7348c5d3e94d187204731b6';
+  const H_PASS = 'fec3cdb48ccd4c638f4544e01caadae02d39649df73b28e5ae16676827640f79';
+  const SESSION_KEY = '_ms_auth';
+
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function dismiss() {
+    const ov = document.getElementById('login-overlay');
+    if (!ov) return;
+    ov.classList.add('hide');
+    setTimeout(() => ov.remove(), 700);
+  }
+
+  if (sessionStorage.getItem(SESSION_KEY) === '1') { dismiss(); return; }
+
+  window.doLogin = async function () {
+    const btn = document.getElementById('login-btn');
+    const err = document.getElementById('login-error');
+    const box = document.getElementById('login-box');
+    btn.disabled = true; err.classList.remove('show');
+    const [hu, hp] = await Promise.all([
+      sha256(document.getElementById('l-user').value),
+      sha256(document.getElementById('l-pass').value),
+    ]);
+    if (hu === H_USER && hp === H_PASS) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      dismiss();
+    } else {
+      box.classList.remove('shake');
+      void box.offsetWidth;
+      box.classList.add('shake');
+      err.classList.add('show');
+      btn.disabled = false;
+    }
+  };
+
+  window.togglePw = function () {
+    const inp = document.getElementById('l-pass');
+    const eye = document.getElementById('pw-eye');
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    eye.textContent = show ? '🙈' : '👁';
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('login-overlay')) doLogin();
+  });
+
+  // ── Three.js background for login ──
+  // Runs after Three.js CDN is loaded (window load event)
+  window.addEventListener('load', function () {
+    const ov = document.getElementById('login-overlay');
+    if (!ov || typeof THREE === 'undefined') return;
+
+    const canvas = document.getElementById('login-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setClearColor(0x050510, 1);
+
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 500);
+    camera.position.z = 60;
+
+    // ── Stars ──
+    const STAR_COUNT = 2800;
+    const sPos = new Float32Array(STAR_COUNT * 3);
+    const sCol = new Float32Array(STAR_COUNT * 3);
+    const palette = [
+      new THREE.Color(0xf59e0b), new THREE.Color(0xf59e0b),
+      new THREE.Color(0xa855f7), new THREE.Color(0xec4899),
+      new THREE.Color(0xffffff), new THREE.Color(0x06b6d4),
+    ];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const i3 = i * 3;
+      sPos[i3]   = (Math.random() - .5) * 220;
+      sPos[i3+1] = (Math.random() - .5) * 220;
+      sPos[i3+2] = (Math.random() - .5) * 130;
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      sCol[i3] = c.r; sCol[i3+1] = c.g; sCol[i3+2] = c.b;
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    starGeo.setAttribute('color',    new THREE.BufferAttribute(sCol, 3));
+    scene.add(new THREE.Points(starGeo,
+      new THREE.PointsMaterial({ size: .55, vertexColors: true, transparent: true, opacity: .75 })));
+
+    // ── Floating wireframe shapes ──
+    const wireMat = col => new THREE.MeshBasicMaterial({
+      color: col, wireframe: true, transparent: true, opacity: .13
+    });
+    const shapeDefs = [
+      { geo: new THREE.IcosahedronGeometry(10, 1),     mat: wireMat(0xf59e0b), x: -22, y:  9, z: -12, sx: .22, sy: .16 },
+      { geo: new THREE.TorusKnotGeometry(6, 1.6, 72, 8), mat: wireMat(0xa855f7), x:  25, y: -7, z:  -6, sx: .18, sy: .13 },
+      { geo: new THREE.OctahedronGeometry(7, 2),       mat: wireMat(0xec4899), x:  2,  y:-16, z: -20, sx: .14, sy: .20 },
+      { geo: new THREE.IcosahedronGeometry(5, 0),      mat: wireMat(0x06b6d4), x: -30, y: -4, z: -16, sx: .25, sy: .10 },
+      { geo: new THREE.TorusGeometry(8, 1.8, 8, 28),  mat: wireMat(0xf59e0b), x:  18, y: 20, z: -28, sx: .12, sy: .17 },
+      { geo: new THREE.IcosahedronGeometry(3.5, 1),   mat: wireMat(0xa855f7), x: -10, y: 22, z:  -8, sx: .30, sy: .22 },
+    ];
+    const meshes = shapeDefs.map(d => {
+      const m = new THREE.Mesh(d.geo, d.mat);
+      m.position.set(d.x, d.y, d.z);
+      m.userData = { sx: d.sx, sy: d.sy, oy: d.y };
+      scene.add(m); return m;
+    });
+
+    // ── Mouse parallax ──
+    let mx = 0, my = 0;
+    window.addEventListener('mousemove', e => {
+      mx = (e.clientX / innerWidth  - .5) * 2;
+      my = (e.clientY / innerHeight - .5) * 2;
+    });
+
+    window.addEventListener('resize', () => {
+      if (!document.getElementById('login-canvas')) return;
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    // ── Render loop ──
+    let rafId;
+    (function tick() {
+      if (!document.getElementById('login-canvas')) { cancelAnimationFrame(rafId); renderer.dispose(); return; }
+      rafId = requestAnimationFrame(tick);
+      const t = Date.now() * .0005;
+      meshes.forEach((m, i) => {
+        m.rotation.x = t * m.userData.sx;
+        m.rotation.y = t * m.userData.sy;
+        m.position.y = m.userData.oy + Math.sin(t * .8 + i) * 1.8;
+      });
+      // Slow star drift
+      const pos = starGeo.attributes.position.array;
+      for (let i = 1; i < STAR_COUNT * 3; i += 3) {
+        pos[i] += .012;
+        if (pos[i] > 110) pos[i] = -110;
+      }
+      starGeo.attributes.position.needsUpdate = true;
+      camera.position.x += (mx * 4 - camera.position.x) * .025;
+      camera.position.y += (-my * 2.5 - camera.position.y) * .025;
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    })();
+  });
+})();
+</script>
+
 <div id="cursor"></div>
 <div id="cursor-dot"></div>
 <canvas id="bg-canvas"></canvas>
