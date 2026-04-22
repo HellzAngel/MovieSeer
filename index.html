@@ -309,10 +309,25 @@
       border-radius: 12px; overflow: hidden;
       transition: transform .3s, box-shadow .3s, border-color .3s;
       cursor: pointer; position: relative;
+      transform-style: preserve-3d;
+      will-change: transform;
     }
+    /* Glaze overlay — follows mouse position */
+    .movie-card::after {
+      content: '';
+      position: absolute; inset: 0; border-radius: 12px;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%),
+        rgba(255,255,255,.18) 0%,
+        rgba(255,255,255,.06) 30%,
+        transparent 65%);
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none; z-index: 4;
+    }
+    .movie-card:hover::after { opacity: 1; }
     .movie-card:hover {
       transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 60px rgba(245,158,11,.2);
+      box-shadow: 0 20px 60px rgba(245,158,11,.25), 0 0 0 1px rgba(245,158,11,.35);
       border-color: var(--neon-gold);
     }
     .card-thumb { width: 100%; aspect-ratio: 2/3; overflow: hidden; position: relative; }
@@ -757,24 +772,82 @@
       .nav-links.mob-open {
         display: flex; flex-direction: column; gap: 0;
         position: fixed; top: 0; left: 0; right: 0;
-        background: rgba(5,5,16,.98); backdrop-filter: blur(20px);
-        padding: 72px 0 28px;
-        border-bottom: 1px solid rgba(245,158,11,.2);
+        background: linear-gradient(160deg, rgba(5,5,20,.97) 0%, rgba(10,5,30,.97) 100%);
+        backdrop-filter: blur(24px) saturate(1.4);
+        padding: 80px 0 32px;
+        border-bottom: 1px solid rgba(245,158,11,.25);
+        box-shadow: 0 8px 40px rgba(0,0,0,.7), 0 1px 0 rgba(245,158,11,.15) inset;
         z-index: 200;
-        animation: mobMenuSlide .25s ease both;
+        animation: mobMenuIn .32s cubic-bezier(.22,.68,0,1.2) both;
       }
-      @keyframes mobMenuSlide {
-        from { opacity: 0; transform: translateY(-12px); }
-        to   { opacity: 1; transform: translateY(0); }
+      .nav-links.mob-closing {
+        animation: mobMenuOut .28s ease forwards !important;
+        pointer-events: none;
+      }
+      @keyframes mobMenuIn {
+        from { opacity: 0; transform: translateY(-18px) scaleY(.96); }
+        to   { opacity: 1; transform: translateY(0)    scaleY(1); }
+      }
+      @keyframes mobMenuOut {
+        from { opacity: 1; transform: translateY(0)    scaleY(1); }
+        to   { opacity: 0; transform: translateY(-14px) scaleY(.97); }
+      }
+      /* Staggered item entrance */
+      .nav-links.mob-open li {
+        opacity: 0;
+        animation: mobItemIn .3s ease forwards;
+      }
+      .nav-links.mob-open li:nth-child(1) { animation-delay: .08s; }
+      .nav-links.mob-open li:nth-child(2) { animation-delay: .13s; }
+      .nav-links.mob-open li:nth-child(3) { animation-delay: .18s; }
+      .nav-links.mob-open li:nth-child(4) { animation-delay: .23s; }
+      .nav-links.mob-open li:nth-child(5) { animation-delay: .28s; }
+      @keyframes mobItemIn {
+        from { opacity: 0; transform: translateX(-14px); }
+        to   { opacity: 1; transform: translateX(0); }
       }
       .nav-links.mob-open li a {
-        display: block; padding: 16px 28px;
-        font-size: 1rem; letter-spacing: 2px;
-        border-bottom: 1px solid rgba(245,158,11,.07);
-        color: #94a3b8;
+        display: flex; align-items: center; gap: 12px;
+        padding: 15px 28px;
+        font-size: .9rem; letter-spacing: 2.5px; font-weight: 700;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+        color: rgba(148,163,184,.85);
+        transition: color .2s, background .2s, padding-left .2s;
+        position: relative;
+      }
+      .nav-links.mob-open li a::before {
+        content: '';
+        width: 3px; height: 0;
+        background: linear-gradient(180deg, var(--neon-gold), var(--neon-pink));
+        border-radius: 2px;
+        transition: height .2s;
+        flex-shrink: 0;
       }
       .nav-links.mob-open li:last-child a { border-bottom: none; }
-      .nav-links.mob-open li a:hover { color: var(--neon-gold); background: rgba(245,158,11,.05); }
+      .nav-links.mob-open li a:hover,
+      .nav-links.mob-open li a:active {
+        color: #fff;
+        background: linear-gradient(90deg, rgba(245,158,11,.08), transparent);
+        padding-left: 36px;
+      }
+      .nav-links.mob-open li a:hover::before,
+      .nav-links.mob-open li a:active::before { height: 20px; }
+      /* Per-item accent colors */
+      .nav-links.mob-open li:nth-child(1) a::before { background: var(--neon-gold); }
+      .nav-links.mob-open li:nth-child(2) a::before { background: var(--neon-pink); }
+      .nav-links.mob-open li:nth-child(3) a::before { background: var(--neon-purple); }
+      .nav-links.mob-open li:nth-child(4) a::before { background: var(--neon-blue); }
+      .nav-links.mob-open li:nth-child(5) a::before { background: var(--neon-orange); }
+      .nav-links.mob-open li:nth-child(1) a:hover,
+      .nav-links.mob-open li:nth-child(1) a:active { color: var(--neon-gold);   background: linear-gradient(90deg,rgba(245,158,11,.1),transparent); }
+      .nav-links.mob-open li:nth-child(2) a:hover,
+      .nav-links.mob-open li:nth-child(2) a:active { color: var(--neon-pink);   background: linear-gradient(90deg,rgba(236,72,153,.1),transparent); }
+      .nav-links.mob-open li:nth-child(3) a:hover,
+      .nav-links.mob-open li:nth-child(3) a:active { color: var(--neon-purple); background: linear-gradient(90deg,rgba(168,85,247,.1),transparent); }
+      .nav-links.mob-open li:nth-child(4) a:hover,
+      .nav-links.mob-open li:nth-child(4) a:active { color: var(--neon-blue);   background: linear-gradient(90deg,rgba(6,182,212,.1),transparent); }
+      .nav-links.mob-open li:nth-child(5) a:hover,
+      .nav-links.mob-open li:nth-child(5) a:active { color: var(--neon-orange); background: linear-gradient(90deg,rgba(249,115,22,.1),transparent); }
 
       /* Sections */
       section, #search-section { padding: 56px 20px; }
@@ -1318,7 +1391,7 @@
 <div class="overlay"></div>
 
 <!-- ── TMDB API KEY SETUP BANNER ── -->
-<div id="setup-banner">
+<div id="setup-banner" class="hidden">
   <strong>⚙ TMDB API KEY REQUIRED</strong>
   <span>Get your free key at <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org → API</a> (free, instant)</span>
   <input id="key-input" type="text" placeholder="Paste your TMDB API v3 key here…" />
@@ -1709,6 +1782,19 @@ document.addEventListener('mousemove', e => { tcx = e.clientX; tcy = e.clientY; 
   cursorDot.style.left = tcx + 'px'; cursorDot.style.top = tcy + 'px';
   requestAnimationFrame(moveCursor);
 })();
+
+// ═══════════════════════════════════════════════════════
+//  CARD GLAZE — track mouse per card for specular highlight
+// ═══════════════════════════════════════════════════════
+document.addEventListener('mousemove', e => {
+  const card = e.target.closest('.movie-card');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  const x = ((e.clientX - r.left) / r.width  * 100).toFixed(1) + '%';
+  const y = ((e.clientY - r.top)  / r.height * 100).toFixed(1) + '%';
+  card.style.setProperty('--mx', x);
+  card.style.setProperty('--my', y);
+});
 
 // ═══════════════════════════════════════════════════════
 //  SCROLL REVEAL
@@ -2565,14 +2651,24 @@ function bootAll() {
 function toggleMobMenu() {
   const links = document.getElementById('nav-links');
   const btn   = document.getElementById('hamburger');
-  const open  = links.classList.toggle('mob-open');
-  btn.classList.toggle('open', open);
-  document.body.style.overflow = open ? 'hidden' : '';
+  if (links.classList.contains('mob-open')) {
+    closeMobMenu();
+  } else {
+    links.classList.add('mob-open');
+    btn.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
 }
 function closeMobMenu() {
-  document.getElementById('nav-links').classList.remove('mob-open');
-  document.getElementById('hamburger').classList.remove('open');
+  const links = document.getElementById('nav-links');
+  const btn   = document.getElementById('hamburger');
+  if (!links.classList.contains('mob-open')) return;
+  links.classList.add('mob-closing');
+  btn.classList.remove('open');
   document.body.style.overflow = '';
+  setTimeout(() => {
+    links.classList.remove('mob-open', 'mob-closing');
+  }, 300);
 }
 
 bootAll();
