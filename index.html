@@ -1601,9 +1601,10 @@ async function openPlayer(tmdbId) {
   showTab('stream');
   buildSrcStrip();
 
-  // Reset panes
-  document.getElementById('pane-stream').innerHTML =
-    '<div class="modal-video-loading"><div class="modal-spinner"></div></div>';
+  // Inject stream embed immediately — don't wait for metadata
+  renderStreamEmbed();
+
+  // Reset other panes
   document.getElementById('pane-trailer').innerHTML =
     '<div class="modal-video-loading"><div class="modal-spinner"></div></div>';
   document.getElementById('modal-info').innerHTML = `
@@ -1679,9 +1680,6 @@ async function openPlayer(tmdbId) {
     document.getElementById('pane-trailer').innerHTML =
       '<div class="modal-no-video"><div class="big-emoji">⚠️</div><div class="no-title">FAILED TO LOAD</div></div>';
   }
-
-  // Inject stream embed (after metadata so spinner shows during info load)
-  renderStreamEmbed();
 }
 
 function playTrailerInModal(ytKey, el) {
