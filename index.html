@@ -2161,19 +2161,19 @@ document.getElementById('regional-tabs').addEventListener('click', e => {
 // ═══════════════════════════════════════════════════════
 const STREAM_SOURCES = [
   { name: 'VidSrc',      hasLang: false, url: (id,l) => `https://vidsrc.me/embed/movie?tmdb=${id}` },
-  { name: 'VidSrc.cc',   hasLang: true,  url: (id,l) => `https://vidsrc.cc/embed/movie?tmdb=${id}${l?'&ds_lang='+l:''}` },
-  { name: 'EmbedSU',     hasLang: false, url: (id,l) => `https://embed.su/embed/movie/${id}` },
+  { name: 'VidSrc.rip',  hasLang: true,  url: (id,l) => `https://vidsrc.rip/embed/movie?tmdb=${id}${l?'&ds_lang='+l:''}` },
+  { name: 'Videasy',     hasLang: false, url: (id,l) => `https://player.videasy.net/movie/${id}` },
   { name: '2Embed',      hasLang: false, url: (id,l) => `https://www.2embed.cc/embed/${id}` },
   { name: 'MoviesAPI',   hasLang: false, url: (id,l) => `https://moviesapi.club/movie/${id}` },
-  { name: 'NontonFilm',  hasLang: false, url: (id,l) => `https://www.NontonFilm21.me/embed/${id}` },
+  { name: 'VidLink',     hasLang: false, url: (id,l) => `https://vidlink.pro/movie/${id}` },
 ];
 const TV_STREAM_SOURCES = [
   { name: 'VidSrc',      hasLang: false, url: (id,s,e,l) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
-  { name: 'VidSrc.cc',   hasLang: true,  url: (id,s,e,l) => `https://vidsrc.cc/embed/tv?tmdb=${id}&season=${s}&episode=${e}${l?'&ds_lang='+l:''}` },
-  { name: 'EmbedSU',     hasLang: false, url: (id,s,e,l) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
+  { name: 'VidSrc.rip',  hasLang: true,  url: (id,s,e,l) => `https://vidsrc.rip/embed/tv?tmdb=${id}&season=${s}&episode=${e}${l?'&ds_lang='+l:''}` },
+  { name: 'Videasy',     hasLang: false, url: (id,s,e,l) => `https://player.videasy.net/tv/${id}/${s}/${e}` },
   { name: '2Embed',      hasLang: false, url: (id,s,e,l) => `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` },
   { name: 'MoviesAPI',   hasLang: false, url: (id,s,e,l) => `https://moviesapi.club/tv/${id}-${s}-${e}` },
-  { name: 'NontonFilm',  hasLang: false, url: (id,s,e,l) => `https://www.NontonFilm21.me/embed/${id}/${s}/${e}` },
+  { name: 'VidLink',     hasLang: false, url: (id,s,e,l) => `https://vidlink.pro/tv/${id}/${s}/${e}` },
 ];
 
 const playerModal = document.getElementById('player-modal');
