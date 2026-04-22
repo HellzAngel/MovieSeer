@@ -293,6 +293,7 @@
     .badge.hd     { background: rgba(6,182,212,.3); border:1px solid var(--neon-blue); color:var(--neon-blue); }
     .badge.now    { background: linear-gradient(135deg,#22c55e,#16a34a); color:#fff; }
     .badge.lang   { background: rgba(245,158,11,.25); border:1px solid rgba(245,158,11,.5); color:var(--neon-gold); }
+    .badge.tv     { background: rgba(168,85,247,.2); border:1px solid rgba(168,85,247,.5); color:var(--neon-purple); }
     .card-rank {
       position: absolute; top: 10px; left: 10px; z-index: 2;
       width: 28px; height: 28px; border-radius: 50%;
@@ -526,6 +527,35 @@
       background: linear-gradient(135deg, var(--neon-gold), var(--neon-orange));
       border-color: transparent; color: #000;
     }
+
+    /* TV Episode Picker */
+    #tv-controls { flex-shrink: 0; background: rgba(5,5,16,.9); border-top: 1px solid rgba(168,85,247,.15); }
+    .tv-season-row {
+      padding: 9px 14px; display: flex; gap: 10px; align-items: center;
+      border-bottom: 1px solid rgba(168,85,247,.1);
+    }
+    #season-select {
+      background: rgba(168,85,247,.1); border: 1px solid rgba(168,85,247,.3);
+      color: var(--neon-purple); padding: 4px 10px; border-radius: 4px;
+      font-family: 'Orbitron', sans-serif; font-size: .62rem; font-weight: 700;
+      cursor: pointer; outline: none; letter-spacing: .5px;
+    }
+    #season-select option { background: #0a0614; color: #e2e8f0; }
+    #ep-count-label { font-family: 'Orbitron', sans-serif; font-size: .6rem; letter-spacing: 1px; color: #475569; margin-left: auto; }
+    #episode-list { max-height: 160px; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; }
+    #episode-list::-webkit-scrollbar { width: 3px; }
+    #episode-list::-webkit-scrollbar-thumb { background: rgba(168,85,247,.3); border-radius: 2px; }
+    .ep-btn {
+      display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px;
+      background: none; border: 1px solid transparent; color: #64748b;
+      cursor: pointer; text-align: left; width: 100%;
+      font-family: 'Rajdhani', sans-serif; font-size: .85rem; font-weight: 500;
+      transition: all .18s;
+    }
+    .ep-btn:hover { background: rgba(168,85,247,.08); border-color: rgba(168,85,247,.2); color: #e2e8f0; }
+    .ep-btn.active { background: rgba(168,85,247,.15); border-color: rgba(168,85,247,.5); color: var(--neon-purple); }
+    .ep-num { font-family: 'Orbitron', sans-serif; font-size: .58rem; font-weight: 700; color: var(--neon-purple); min-width: 28px; }
+    .ep-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     /* Info sidebar */
     .modal-info {
@@ -775,6 +805,7 @@
       <li><a href="#trending">Trending</a></li>
       <li><a href="#bollywood">Bollywood</a></li>
       <li><a href="#regional">Regional</a></li>
+      <li><a href="#series">Series</a></li>
       <li><a href="#top-rated">Top Rated</a></li>
     </ul>
     <div class="nav-search">
@@ -863,6 +894,16 @@
     <div id="bollywood-grid" class="movie-grid reveal"></div>
   </section>
 
+  <!-- ── WEB SERIES ── -->
+  <section id="series">
+    <div class="section-head reveal">
+      <h2>Web Series &amp; Shows</h2>
+      <p>Binge-worthy Indian originals</p>
+      <div class="accent-line"></div>
+    </div>
+    <div id="series-grid" class="movie-grid reveal"></div>
+  </section>
+
   <!-- ── REGIONAL ── -->
   <section id="regional">
     <div class="section-head reveal">
@@ -945,6 +986,16 @@
         <!-- Source selector -->
         <div class="src-strip" id="src-strip">
           <span class="src-strip-label">SOURCE:</span>
+        </div>
+
+        <!-- TV episode picker (hidden for movies) -->
+        <div id="tv-controls" style="display:none;">
+          <div class="tv-season-row">
+            <span class="src-strip-label">SEASON</span>
+            <select id="season-select"></select>
+            <span id="ep-count-label"></span>
+          </div>
+          <div id="episode-list"></div>
         </div>
       </div>
 
@@ -1464,16 +1515,29 @@ document.getElementById('regional-tabs').addEventListener('click', e => {
 //  Movie embed providers (TMDB ID → iframe embed)
 // ═══════════════════════════════════════════════════════
 const STREAM_SOURCES = [
+  { name: 'VidSrc',      url: id => `https://vidsrc.me/embed/movie?tmdb=${id}` },
+  { name: 'VidSrc.cc',   url: id => `https://vidsrc.cc/embed/movie?tmdb=${id}` },
+  { name: 'EmbedSU',     url: id => `https://embed.su/embed/movie/${id}` },
   { name: '2Embed',      url: id => `https://www.2embed.cc/embed/${id}` },
-  { name: 'AutoEmbed',   url: id => `https://player.autoembed.cc/embed/movie/${id}` },
-  { name: 'VidLink',     url: id => `https://www.vidlink.pro/movie/${id}` },
-  { name: 'Smashystream',url: id => `https://embed.smashystream.com/playere.php?tmdb=${id}` },
+  { name: 'MoviesAPI',   url: id => `https://moviesapi.club/movie/${id}` },
+  { name: 'NontonFilm',  url: id => `https://www.NontonFilm21.me/embed/${id}` },
+];
+const TV_STREAM_SOURCES = [
+  { name: 'VidSrc',      url: (id,s,e) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
+  { name: 'VidSrc.cc',   url: (id,s,e) => `https://vidsrc.cc/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
+  { name: 'EmbedSU',     url: (id,s,e) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
+  { name: '2Embed',      url: (id,s,e) => `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` },
+  { name: 'MoviesAPI',   url: (id,s,e) => `https://moviesapi.club/tv/${id}-${s}-${e}` },
+  { name: 'NontonFilm',  url: (id,s,e) => `https://www.NontonFilm21.me/embed/${id}/${s}/${e}` },
 ];
 
 const playerModal = document.getElementById('player-modal');
 let currentMovieId    = null;
 let currentSourceIdx  = 0;
 let currentYtKey      = null;
+let currentIsTV       = false;
+let currentSeason     = 1;
+let currentEpisode    = 1;
 
 // Tab switcher
 document.getElementById('player-tabs').addEventListener('click', e => {
@@ -1497,34 +1561,43 @@ document.getElementById('src-strip').addEventListener('click', e => {
   showTab('stream');
 });
 
+document.getElementById('season-select').addEventListener('change', e => {
+  loadSeason(currentMovieId, parseInt(e.target.value, 10));
+});
+
 function renderStreamEmbed() {
-  const src = STREAM_SOURCES[currentSourceIdx];
+  const sources = currentIsTV ? TV_STREAM_SOURCES : STREAM_SOURCES;
+  const src = sources[currentSourceIdx];
+  const url = currentIsTV ? src.url(currentMovieId, currentSeason, currentEpisode) : src.url(currentMovieId);
+  const ep  = currentIsTV ? `S${String(currentSeason).padStart(2,'0')}E${String(currentEpisode).padStart(2,'0')} — ` : '';
   document.getElementById('pane-stream').innerHTML = `
     <iframe
-      src="${src.url(currentMovieId)}"
-      title="Movie — ${src.name}"
+      src="${url}"
+      title="${ep}${src.name}"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
       allowfullscreen
-      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock"
       style="position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;"
     ></iframe>`;
 }
 
 function buildSrcStrip() {
+  const sources = currentIsTV ? TV_STREAM_SOURCES : STREAM_SOURCES;
   const strip = document.getElementById('src-strip');
   strip.innerHTML = `<span class="src-strip-label">SOURCE:</span>` +
-    STREAM_SOURCES.map((s, i) =>
+    sources.map((s, i) =>
       `<button class="src-btn${i === 0 ? ' active' : ''}" data-src="${i}">${s.name}</button>`
     ).join('');
 }
 
 async function openPlayer(tmdbId) {
+  currentIsTV      = false;
   currentMovieId   = tmdbId;
   currentSourceIdx = 0;
   currentYtKey     = null;
 
   playerModal.classList.add('open');
   document.body.style.overflow = 'hidden';
+  document.getElementById('tv-controls').style.display = 'none';
   showTab('stream');
   buildSrcStrip();
 
@@ -1624,6 +1697,8 @@ function playTrailerInModal(ytKey, el) {
 function closePlayer() {
   playerModal.classList.remove('open');
   document.body.style.overflow = '';
+  currentIsTV = false;
+  document.getElementById('tv-controls').style.display = 'none';
   setTimeout(() => {
     document.getElementById('pane-stream').innerHTML =
       '<div class="modal-video-loading"><div class="modal-spinner"></div></div>';
@@ -1677,10 +1752,204 @@ function loadDemoData() {
     DEMO_MOVIES.filter(m => m.original_language === 'ta').map(m => buildCard(m, null, 'lang')).join('');
   document.getElementById('toprated-grid').innerHTML =
     sorted.slice(0, 6).map((m, i) => buildCard(m, i + 1, 'hd')).join('');
+  document.getElementById('series-grid').innerHTML =
+    DEMO_SERIES.map(s => buildSeriesCard(s)).join('');
 
   const items = DEMO_MOVIES.map(m =>
     `<span class="marquee-item"><span class="dot"></span>${esc(m.title)}</span>`).join('');
   document.getElementById('marquee-track').innerHTML = items + items;
+}
+
+// ── Web Series demo data ──
+const DEMO_SERIES = [
+  { id: 84958,  name: 'Scam 1992',         first_air_date: '2020-10-09', vote_average: 9.5, original_language: 'hi', poster_path: null },
+  { id: 100088, name: 'The Family Man',     first_air_date: '2019-09-20', vote_average: 8.7, original_language: 'hi', poster_path: null },
+  { id: 97527,  name: 'Mirzapur',           first_air_date: '2018-11-16', vote_average: 8.5, original_language: 'hi', poster_path: null },
+  { id: 96680,  name: 'Sacred Games',       first_air_date: '2018-07-06', vote_average: 8.2, original_language: 'hi', poster_path: null },
+  { id: 148539, name: 'Panchayat',          first_air_date: '2020-04-03', vote_average: 9.0, original_language: 'hi', poster_path: null },
+  { id: 154008, name: 'Aspirants',          first_air_date: '2021-04-09', vote_average: 9.5, original_language: 'hi', poster_path: null },
+  { id: 102415, name: 'Delhi Crime',        first_air_date: '2019-03-22', vote_average: 8.5, original_language: 'hi', poster_path: null },
+  { id: 85937,  name: 'Breathe',            first_air_date: '2018-01-26', vote_average: 7.8, original_language: 'hi', poster_path: null },
+];
+
+function buildSeriesCard(show) {
+  const title = esc(show.name || show.title || '');
+  const img   = show.poster_path ? IMG_W500 + show.poster_path : null;
+  const score = show.vote_average ? '⭐ ' + show.vote_average.toFixed(1) : '';
+  const year  = (show.first_air_date || show.release_date || '').slice(0, 4);
+  const lang  = { hi:'Hindi', ta:'Tamil', te:'Telugu', ml:'Malayalam', kn:'Kannada', pa:'Punjabi', bn:'Bengali' }[show.original_language] || show.original_language?.toUpperCase() || '';
+  const id    = show.id;
+  const thumb = img
+    ? `<img src="${img}" alt="${title}" loading="lazy" onerror="imgError(this)" />`
+    : `<div class="card-thumb-fallback">
+         <div class="cf-icon">📺</div>
+         <div class="cf-title">${title}</div>
+         <div class="cf-lang">${[lang, year].filter(Boolean).join(' · ')}</div>
+       </div>`;
+  return `
+  <div class="movie-card" onclick="openTVPlayer(${id})">
+    <div class="card-thumb">
+      ${thumb}
+      <span class="badge tv">TV</span>
+      <div class="play-overlay"><div class="play-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+      </div></div>
+    </div>
+    <div class="card-info">
+      <h3>${title}</h3>
+      <div class="card-meta">
+        <span class="score">${score}</span>
+        <span>${year}</span>
+        ${lang ? `<span>${lang}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+let allSeries = null;
+async function loadSeriesSection() {
+  if (!TMDB_BEARER) {
+    document.getElementById('series-grid').innerHTML = DEMO_SERIES.map(s => buildSeriesCard(s)).join('');
+    return;
+  }
+  renderSkeletons('series-grid', 6);
+  try {
+    await delay(750);
+    const d = await tmdbFetch('/trending/tv/week?region=IN&language=en-US');
+    const indian = d.results.filter(s => ['hi','ta','te','ml','kn','pa','bn','mr'].includes(s.original_language));
+    allSeries = indian.length >= 4 ? indian : d.results;
+    document.getElementById('series-grid').innerHTML = allSeries.slice(0, 8).map(s => buildSeriesCard(s)).join('');
+  } catch {
+    document.getElementById('series-grid').innerHTML = DEMO_SERIES.map(s => buildSeriesCard(s)).join('');
+  }
+}
+
+async function openTVPlayer(tmdbId) {
+  currentIsTV      = true;
+  currentMovieId   = tmdbId;
+  currentSourceIdx = 0;
+  currentYtKey     = null;
+  currentSeason    = 1;
+  currentEpisode   = 1;
+
+  playerModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('tv-controls').style.display = 'block';
+  showTab('stream');
+  buildSrcStrip();
+
+  document.getElementById('pane-stream').innerHTML =
+    '<div class="modal-video-loading"><div class="modal-spinner"></div></div>';
+  document.getElementById('pane-trailer').innerHTML =
+    '<div class="modal-video-loading"><div class="modal-spinner"></div></div>';
+  document.getElementById('episode-list').innerHTML =
+    '<div style="padding:14px 0;display:flex;justify-content:center;"><div class="modal-spinner" style="width:24px;height:24px;"></div></div>';
+  document.getElementById('modal-info').innerHTML = `
+    <div class="skeleton" style="width:100%;aspect-ratio:2/3;border-radius:10px;margin-bottom:12px;"></div>
+    <div class="skeleton modal-skeleton-line" style="width:90%"></div>
+    <div class="skeleton modal-skeleton-line" style="width:65%"></div>
+    <div class="skeleton modal-skeleton-line" style="width:80%"></div>`;
+
+  try {
+    const [meta, vids] = await Promise.all([
+      tmdbFetch(`/tv/${tmdbId}?language=en-US`),
+      tmdbFetch(`/tv/${tmdbId}/videos?language=en-US`).catch(() => ({ results: [] })),
+    ]);
+
+    const trailer = (vids.results || []).find(v => v.type === 'Trailer' && v.site === 'YouTube')
+                 || (vids.results || []).find(v => v.site === 'YouTube');
+    currentYtKey = trailer?.key || null;
+
+    document.getElementById('pane-trailer').innerHTML = currentYtKey
+      ? `<div class="modal-yt-thumb" onclick="playTrailerInModal('${currentYtKey}', this)">
+           <img src="https://img.youtube.com/vi/${currentYtKey}/maxresdefault.jpg"
+                onerror="this.src='https://img.youtube.com/vi/${currentYtKey}/hqdefault.jpg'"
+                alt="Trailer thumbnail" />
+           <div class="modal-yt-play"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+           <div class="modal-yt-label">CLICK TO PLAY TRAILER</div>
+         </div>`
+      : `<div class="modal-no-video"><div class="big-emoji">📺</div><div class="no-title">NO TRAILER FOUND</div></div>`;
+
+    const seasons = (meta.seasons || []).filter(s => s.season_number > 0);
+    const totalSeasons = seasons.length || meta.number_of_seasons || 1;
+    const sel = document.getElementById('season-select');
+    sel.innerHTML = Array.from({ length: totalSeasons }, (_, i) =>
+      `<option value="${i + 1}">Season ${i + 1}</option>`
+    ).join('');
+    sel.value = '1';
+
+    const title   = esc(meta.name || '');
+    const poster  = meta.poster_path ? IMG_W500 + meta.poster_path : '';
+    const score   = meta.vote_average?.toFixed(1) || '—';
+    const year    = meta.first_air_date?.slice(0, 4) || '';
+    const lang    = { hi:'Hindi', ta:'Tamil', te:'Telugu', ml:'Malayalam', kn:'Kannada', pa:'Punjabi', bn:'Bengali' }[meta.original_language] || meta.original_language?.toUpperCase() || '';
+    const status  = esc(meta.status || '');
+    const overview= esc(meta.overview || 'No description available.');
+    const genres  = (meta.genres || []).slice(0, 4).map(g => `<span class="genre-tag">${esc(g.name)}</span>`).join('');
+    const sLabel  = `${totalSeasons} Season${totalSeasons !== 1 ? 's' : ''}`;
+    const eLabel  = meta.number_of_episodes ? `${meta.number_of_episodes} Eps` : '';
+
+    document.getElementById('modal-info').innerHTML = `
+      ${poster
+        ? `<img class="modal-poster" src="${poster}" alt="${title}" loading="lazy" />`
+        : `<div class="modal-poster-placeholder">📺</div>`}
+      <div class="modal-title">${title}</div>
+      <div class="modal-genres">${genres}</div>
+      <div class="modal-score">${score}<span style="font-size:.75rem;font-family:'Rajdhani',sans-serif;color:#64748b;font-weight:400;"> / 10</span></div>
+      <div class="modal-meta-row">
+        <span class="modal-meta-item">🗓 ${year}</span>
+        <span class="modal-meta-item">📺 ${sLabel}</span>
+        ${eLabel ? `<span class="modal-meta-item">🎬 ${eLabel}</span>` : ''}
+        <span class="modal-meta-item">🗣 ${lang}</span>
+        <span class="modal-meta-item">📡 ${status}</span>
+      </div>
+      <p class="modal-synopsis">${overview}</p>
+      ${currentYtKey ? `<a class="modal-yt-link" href="https://www.youtube.com/watch?v=${currentYtKey}" target="_blank" rel="noopener noreferrer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.1 2.8 12 2.8 12 2.8s-4.1 0-6.8.1c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.2v2c0 2.1.3 4.2.3 4.2s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.3 1.2C7.2 21.6 12 21.6 12 21.6s4.1 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.2v-2C23.3 9.1 23 7 23 7zM9.7 15.5V8.4l8.1 3.6-8.1 3.5z"/></svg>
+        WATCH TRAILER
+      </a>` : ''}`;
+
+    await loadSeason(tmdbId, 1);
+  } catch(err) {
+    console.error(err);
+    document.getElementById('modal-info').innerHTML = '<div class="error-state"><p>Could not load series info.</p></div>';
+    document.getElementById('episode-list').innerHTML = '';
+  }
+  renderStreamEmbed();
+}
+
+async function loadSeason(seriesId, seasonNum) {
+  currentSeason  = seasonNum;
+  currentEpisode = 1;
+  document.getElementById('ep-count-label').textContent = 'LOADING…';
+  document.getElementById('episode-list').innerHTML =
+    '<div style="padding:12px 0;display:flex;justify-content:center;"><div class="modal-spinner" style="width:22px;height:22px;"></div></div>';
+  try {
+    const data = await tmdbFetch(`/tv/${seriesId}/season/${seasonNum}`);
+    const eps  = data.episodes || [];
+    document.getElementById('ep-count-label').textContent = `${eps.length} EPS`;
+    document.getElementById('episode-list').innerHTML = eps.map(ep =>
+      `<button class="ep-btn${ep.episode_number === 1 ? ' active' : ''}" onclick="playEpisode(${ep.episode_number})">
+         <span class="ep-num">E${String(ep.episode_number).padStart(2,'0')}</span>
+         <span class="ep-title">${esc(ep.name || 'Episode ' + ep.episode_number)}</span>
+       </button>`
+    ).join('');
+  } catch {
+    document.getElementById('ep-count-label').textContent = '';
+    document.getElementById('episode-list').innerHTML =
+      '<p style="padding:10px 14px;color:#475569;font-size:.8rem;">Could not load episodes.</p>';
+  }
+  renderStreamEmbed();
+}
+
+function playEpisode(epNum) {
+  currentEpisode = epNum;
+  document.querySelectorAll('.ep-btn').forEach(b => {
+    const n = parseInt(b.querySelector('.ep-num').textContent.replace('E',''), 10);
+    b.classList.toggle('active', n === epNum);
+  });
+  showTab('stream');
+  renderStreamEmbed();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1694,6 +1963,7 @@ function bootAll() {
   loadNowPlaying();
   loadBollywood();
   loadRegional(activeRegionalLang);
+  loadSeriesSection();
   loadTopRated();
   loadMarquee();
 }
