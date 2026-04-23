@@ -463,16 +463,56 @@
     }
 
     /* ── CATEGORIES ── */
-    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
-    .cat-card {
-      background: var(--card-bg); border: 1px solid rgba(245,158,11,.1);
-      border-radius: 10px; padding: 24px 16px; text-align: center; cursor: pointer;
-      transition: transform .3s, border-color .3s, box-shadow .3s;
+    /* ── GENRE GRID ── */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
     }
-    .cat-card:hover { transform: translateY(-5px); border-color: var(--neon-gold); box-shadow: 0 10px 40px rgba(245,158,11,.2); }
-    .cat-icon { font-size: 2rem; margin-bottom: 10px; }
-    .cat-card h3 { font-size: .9rem; font-weight: 700; color: #e2e8f0; }
-    .cat-card p { font-size: .72rem; color: #64748b; margin-top: 4px; }
+    .cat-card {
+      position: relative; overflow: hidden;
+      border-radius: 16px; padding: 32px 16px 24px;
+      text-align: center; cursor: pointer;
+      border: 1px solid rgba(255,255,255,.07);
+      background: var(--card-bg);
+      transition: transform .35s cubic-bezier(.22,.68,0,1.2), box-shadow .35s, border-color .3s;
+      isolation: isolate;
+    }
+    /* Gradient bg glow per genre — set via inline var */
+    .cat-card::before {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background: var(--cat-grad, linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.03)));
+      opacity: .7; transition: opacity .3s;
+    }
+    .cat-card::after {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.08) 0%, transparent 70%);
+      opacity: 0; transition: opacity .3s;
+    }
+    .cat-card:hover { transform: translateY(-7px) scale(1.03); border-color: var(--cat-color, var(--neon-gold)); box-shadow: 0 16px 48px var(--cat-shadow, rgba(245,158,11,.25)); }
+    .cat-card:hover::before { opacity: 1; }
+    .cat-card:hover::after  { opacity: 1; }
+    .cat-icon {
+      font-size: 2.6rem; margin-bottom: 12px; position: relative; z-index: 2;
+      filter: drop-shadow(0 0 10px var(--cat-color, rgba(245,158,11,.6)));
+      display: block;
+    }
+    .cat-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .78rem; font-weight: 700; letter-spacing: 1.5px;
+      color: #e2e8f0; text-transform: uppercase;
+      position: relative; z-index: 2; margin-bottom: 8px;
+    }
+    .cat-pill {
+      display: inline-block;
+      padding: 3px 12px; border-radius: 999px;
+      font-size: .62rem; font-weight: 700; letter-spacing: 1px;
+      background: var(--cat-pill-bg, rgba(245,158,11,.15));
+      border: 1px solid var(--cat-color, rgba(245,158,11,.4));
+      color: var(--cat-color, var(--neon-gold));
+      position: relative; z-index: 2;
+      text-transform: uppercase;
+    }
 
     /* ── SEARCH SECTION ── */
     #search-section { display: none; padding: 90px 48px; }
@@ -874,7 +914,10 @@
       .tab-btn { padding: 7px 14px; font-size: .8rem; }
 
       /* Genre grid */
-      .cat-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+      .cat-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .cat-card { padding: 20px 10px 16px; border-radius: 12px; }
+      .cat-icon { font-size: 2rem; margin-bottom: 8px; }
+      .cat-card h3 { font-size: .68rem; }
 
       /* Footer */
       footer { padding: 36px 20px; }
@@ -943,10 +986,10 @@
 
       /* Genre grid */
       .cat-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
-      .cat-card { padding: 14px 8px; }
-      .cat-icon { font-size: 1.4rem; margin-bottom: 6px; }
-      .cat-card h3 { font-size: .72rem; }
-      .cat-card p { display: none; }
+      .cat-card { padding: 16px 6px 12px; border-radius: 10px; }
+      .cat-icon { font-size: 1.6rem; margin-bottom: 6px; }
+      .cat-card h3 { font-size: .6rem; letter-spacing: .8px; }
+      .cat-pill { display: none; }
 
       /* Player modal */
       .modal-inner {
@@ -1406,7 +1449,7 @@
     <ul class="nav-links" id="nav-links">
       <li><a href="#trending" onclick="closeMobMenu()">Trending</a></li>
       <li><a href="#bollywood" onclick="closeMobMenu()">Bollywood</a></li>
-      <li><a href="#regional" onclick="closeMobMenu()">Regional</a></li>
+      <li><a href="#latest-lang" onclick="closeMobMenu()">Latest</a></li>
       <li><a href="#series" onclick="closeMobMenu()">Series</a></li>
       <li><a href="#top-rated" onclick="closeMobMenu()">Top Rated</a></li>
     </ul>
@@ -1447,6 +1490,9 @@
       <div class="accent-line"></div>
     </div>
     <div id="search-results" class="movie-grid"></div>
+    <div id="search-load-more" style="display:none;text-align:center;margin-top:32px;">
+      <button class="btn-outline" id="load-more-btn" style="min-width:180px;">Load More</button>
+    </div>
   </section>
 
   <!-- ── MARQUEE ── -->
@@ -1482,7 +1528,7 @@
       <p>Most watched Indian movies this week</p>
       <div class="accent-line"></div>
     </div>
-    <div id="trending-grid" class="movie-grid reveal"></div>
+    <div id="trending-grid" class="movie-grid"></div>
   </section>
 
   <!-- ── NOW PLAYING ── -->
@@ -1492,7 +1538,7 @@
       <p>Currently showing in Indian theatres</p>
       <div class="accent-line"></div>
     </div>
-    <div id="nowplaying-grid" class="movie-grid reveal"></div>
+    <div id="nowplaying-grid" class="movie-grid"></div>
   </section>
 
   <!-- ── BOLLYWOOD ── -->
@@ -1502,7 +1548,7 @@
       <p>Top Hindi blockbusters</p>
       <div class="accent-line"></div>
     </div>
-    <div id="bollywood-grid" class="movie-grid reveal"></div>
+    <div id="bollywood-grid" class="movie-grid"></div>
   </section>
 
   <!-- ── WEB SERIES ── -->
@@ -1512,43 +1558,51 @@
       <p>Binge-worthy Indian originals</p>
       <div class="accent-line"></div>
     </div>
-    <div id="series-grid" class="movie-grid reveal"></div>
+    <div id="series-grid" class="movie-grid"></div>
   </section>
 
-  <!-- ── REGIONAL ── -->
-  <section id="regional">
+  <!-- ── LATEST BY LANGUAGE ── -->
+  <section id="latest-lang">
     <div class="section-head reveal">
-      <h2>Regional Cinema</h2>
-      <p>South Indian & beyond</p>
+      <h2>Latest Releases</h2>
+      <p>Freshest movies by language</p>
       <div class="accent-line"></div>
     </div>
-    <div class="tabs reveal" id="regional-tabs">
-      <button class="tab-btn active" data-lang="ta">Tamil</button>
+    <div class="tabs reveal" id="latest-lang-tabs">
+      <button class="tab-btn active" data-lang="hi">Hindi</button>
+      <button class="tab-btn" data-lang="ta">Tamil</button>
       <button class="tab-btn" data-lang="te">Telugu</button>
       <button class="tab-btn" data-lang="ml">Malayalam</button>
       <button class="tab-btn" data-lang="kn">Kannada</button>
-      <button class="tab-btn" data-lang="pa">Punjabi</button>
       <button class="tab-btn" data-lang="bn">Bengali</button>
     </div>
-    <div id="regional-grid" class="movie-grid reveal"></div>
+    <div id="latest-lang-grid" class="movie-grid"></div>
   </section>
 
   <!-- ── GENRES ── -->
   <section id="genres">
     <div class="section-head reveal">
       <h2>Browse by Genre</h2>
-      <p>Click any genre to search live</p>
+      <p>Tap a genre to explore Indian films</p>
       <div class="accent-line"></div>
     </div>
     <div class="cat-grid reveal">
-      <div class="cat-card" data-genre="28"><div class="cat-icon">⚔️</div><h3>Action</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="10749"><div class="cat-icon">💕</div><h3>Romance</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="18"><div class="cat-icon">🎭</div><h3>Drama</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="35"><div class="cat-icon">😂</div><h3>Comedy</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="53"><div class="cat-icon">🔪</div><h3>Thriller</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="27"><div class="cat-icon">👻</div><h3>Horror</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="878"><div class="cat-icon">🚀</div><h3>Sci-Fi</h3><p>Search →</p></div>
-      <div class="cat-card" data-genre="80"><div class="cat-icon">🕵️</div><h3>Crime</h3><p>Search →</p></div>
+      <div class="cat-card" data-genre="28"    style="--cat-grad:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.03));--cat-color:#ef4444;--cat-shadow:rgba(239,68,68,.3);--cat-pill-bg:rgba(239,68,68,.15);">
+        <span class="cat-icon">⚔️</span><h3>Action</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="10749" style="--cat-grad:linear-gradient(135deg,rgba(236,72,153,.15),rgba(236,72,153,.03));--cat-color:#ec4899;--cat-shadow:rgba(236,72,153,.3);--cat-pill-bg:rgba(236,72,153,.15);">
+        <span class="cat-icon">💕</span><h3>Romance</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="18"    style="--cat-grad:linear-gradient(135deg,rgba(168,85,247,.15),rgba(168,85,247,.03));--cat-color:#a855f7;--cat-shadow:rgba(168,85,247,.3);--cat-pill-bg:rgba(168,85,247,.15);">
+        <span class="cat-icon">🎭</span><h3>Drama</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="35"    style="--cat-grad:linear-gradient(135deg,rgba(234,179,8,.15),rgba(234,179,8,.03));--cat-color:#eab308;--cat-shadow:rgba(234,179,8,.3);--cat-pill-bg:rgba(234,179,8,.15);">
+        <span class="cat-icon">😂</span><h3>Comedy</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="53"    style="--cat-grad:linear-gradient(135deg,rgba(249,115,22,.15),rgba(249,115,22,.03));--cat-color:#f97316;--cat-shadow:rgba(249,115,22,.3);--cat-pill-bg:rgba(249,115,22,.15);">
+        <span class="cat-icon">🔪</span><h3>Thriller</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="27"    style="--cat-grad:linear-gradient(135deg,rgba(6,182,212,.15),rgba(6,182,212,.03));--cat-color:#06b6d4;--cat-shadow:rgba(6,182,212,.3);--cat-pill-bg:rgba(6,182,212,.15);">
+        <span class="cat-icon">👻</span><h3>Horror</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="878"   style="--cat-grad:linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.03));--cat-color:#6366f1;--cat-shadow:rgba(99,102,241,.3);--cat-pill-bg:rgba(99,102,241,.15);">
+        <span class="cat-icon">🚀</span><h3>Sci-Fi</h3><span class="cat-pill">Explore</span></div>
+      <div class="cat-card" data-genre="80"    style="--cat-grad:linear-gradient(135deg,rgba(20,184,166,.15),rgba(20,184,166,.03));--cat-color:#14b8a6;--cat-shadow:rgba(20,184,166,.3);--cat-pill-bg:rgba(20,184,166,.15);">
+        <span class="cat-icon">🕵️</span><h3>Crime</h3><span class="cat-pill">Explore</span></div>
     </div>
   </section>
 
@@ -1559,7 +1613,7 @@
       <p>All-time classics from India</p>
       <div class="accent-line"></div>
     </div>
-    <div id="toprated-grid" class="movie-grid reveal"></div>
+    <div id="toprated-grid" class="movie-grid"></div>
   </section>
 
   <!-- ── FOOTER ── -->
@@ -1803,6 +1857,9 @@ const revealIO = new IntersectionObserver(
   entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
   { threshold: 0.1 }
 );
+function observeReveal() {
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => revealIO.observe(el));
+}
 document.querySelectorAll('.reveal').forEach(el => revealIO.observe(el));
 
 // ═══════════════════════════════════════════════════════
@@ -1859,7 +1916,7 @@ function buildCard(movie, rank, badgeType) {
 
   const badgeLabels = { new:'NEW', top:'TOP', hd:'HD', now:'IN CINEMAS', lang: lang };
   const thumb = img
-    ? `<img src="${img}" alt="${title}" loading="lazy" onerror="imgError(this)" />`
+    ? `<img src="${img}" alt="${title}" onerror="imgError(this)" />`
     : `<div class="card-thumb-fallback">
          <div class="cf-icon">🎬</div>
          <div class="cf-title">${title}</div>
@@ -2038,35 +2095,6 @@ async function loadBollywood() {
   }
 }
 
-let allRegional = { ta: null, te: null, ml: null, kn: null, pa: null, bn: null };
-let activeRegionalLang = 'ta';
-
-async function loadRegional(lang) {
-  if (allRegional[lang]) { renderRegionalGrid(lang); return; }
-  if (!TMDB_BEARER) {
-    const filtered = DEMO_MOVIES.filter(m => m.original_language === lang);
-    allRegional[lang] = filtered.length ? filtered : DEMO_MOVIES.slice(0, 6);
-    renderRegionalGrid(lang);
-    return;
-  }
-  renderSkeletons('regional-grid', 6);
-  try {
-    await delay(900);
-    const d = await tmdbFetch(`/discover/movie?with_original_language=${lang}&sort_by=popularity.desc`);
-    allRegional[lang] = d.results;
-    renderRegionalGrid(lang);
-  } catch {
-    document.getElementById('regional-grid').innerHTML =
-      '<div class="error-state"><p>Could not load regional movies.</p></div>';
-  }
-}
-function renderRegionalGrid(lang) {
-  const list = allRegional[lang] || [];
-  document.getElementById('regional-grid').innerHTML =
-    list.slice(0, 8).map(m => buildCard(m, null, 'lang')).join('') ||
-    '<div class="error-state"><p>No results.</p></div>';
-}
-
 async function loadTopRated() {
   renderSkeletons('toprated-grid', 6);
   try {
@@ -2096,18 +2124,26 @@ async function loadMarquee() {
 }
 
 // ── Search ──
+// ── Search state for pagination ──
+let _searchState = { type: null, query: null, genreId: null, page: 1, totalPages: 1 };
+
 async function searchMovies(query) {
+  _searchState = { type: 'query', query, genreId: null, page: 1, totalPages: 1 };
   const section = document.getElementById('search-section');
   const grid    = document.getElementById('search-results');
   section.style.display = 'block';
   document.getElementById('search-query-label').textContent = `Results for "${query}"`;
   grid.innerHTML = Array.from({length:6}).map(skeletonCard).join('');
+  document.getElementById('search-load-more').style.display = 'none';
   section.scrollIntoView({ behavior: 'smooth' });
   try {
-    const d = await tmdbFetch(`/search/movie?query=${encodeURIComponent(query)}&region=IN`);
+    const d = await tmdbFetch(`/search/movie?query=${encodeURIComponent(query)}&region=IN&page=1`);
+    _searchState.totalPages = d.total_pages || 1;
     grid.innerHTML = d.results?.length
       ? d.results.slice(0, 12).map(m => buildCard(m, null, 'hd')).join('')
       : '<div class="error-state"><p>No results found.</p></div>';
+    document.getElementById('search-load-more').style.display =
+      (_searchState.totalPages > 1 && d.results?.length) ? 'block' : 'none';
   } catch {
     grid.innerHTML = '<div class="error-state"><p>Search failed. Check your API key.</p></div>';
   }
@@ -2115,22 +2151,48 @@ async function searchMovies(query) {
 
 // ── Genre search ──
 async function searchByGenre(genreId) {
+  _searchState = { type: 'genre', query: null, genreId, page: 1, totalPages: 1 };
   const section = document.getElementById('search-section');
   const grid    = document.getElementById('search-results');
   section.style.display = 'block';
   const names = { 28:'Action', 10749:'Romance', 18:'Drama', 35:'Comedy', 53:'Thriller', 27:'Horror', 878:'Sci-Fi', 80:'Crime' };
   document.getElementById('search-query-label').textContent = `Genre: ${names[genreId] || genreId}`;
   grid.innerHTML = Array.from({length:6}).map(skeletonCard).join('');
+  document.getElementById('search-load-more').style.display = 'none';
   section.scrollIntoView({ behavior: 'smooth' });
   try {
-    const d = await tmdbFetch(`/discover/movie?with_genres=${genreId}&with_original_language=hi%7Cta%7Cte%7Cml&sort_by=popularity.desc`);
+    const d = await tmdbFetch(`/discover/movie?with_genres=${genreId}&with_original_language=hi%7Cta%7Cte%7Cml&sort_by=popularity.desc&page=1`);
+    _searchState.totalPages = d.total_pages || 1;
     grid.innerHTML = d.results?.length
       ? d.results.slice(0, 12).map(m => buildCard(m, null, 'hd')).join('')
       : '<div class="error-state"><p>No results found.</p></div>';
+    document.getElementById('search-load-more').style.display =
+      (_searchState.totalPages > 1 && d.results?.length) ? 'block' : 'none';
   } catch {
     grid.innerHTML = '<div class="error-state"><p>Failed to load genre results.</p></div>';
   }
 }
+
+// ── Load More ──
+document.getElementById('load-more-btn').addEventListener('click', async () => {
+  if (_searchState.page >= _searchState.totalPages) return;
+  _searchState.page++;
+  const btn  = document.getElementById('load-more-btn');
+  const grid = document.getElementById('search-results');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  try {
+    let d;
+    if (_searchState.type === 'query') {
+      d = await tmdbFetch(`/search/movie?query=${encodeURIComponent(_searchState.query)}&region=IN&page=${_searchState.page}`);
+    } else {
+      d = await tmdbFetch(`/discover/movie?with_genres=${_searchState.genreId}&with_original_language=hi%7Cta%7Cte%7Cml&sort_by=popularity.desc&page=${_searchState.page}`);
+    }
+    if (d.results?.length) grid.insertAdjacentHTML('beforeend', d.results.map(m => buildCard(m, null, 'hd')).join(''));
+  } catch {}
+  btn.disabled = false; btn.textContent = 'Load More';
+  if (_searchState.page >= _searchState.totalPages)
+    document.getElementById('search-load-more').style.display = 'none';
+});
 
 // ── Search input ──
 document.getElementById('search-input').addEventListener('keydown', e => {
@@ -2145,14 +2207,32 @@ document.querySelectorAll('.cat-card').forEach(card => {
   card.addEventListener('click', () => searchByGenre(card.dataset.genre));
 });
 
-// ── Regional tabs ──
-document.getElementById('regional-tabs').addEventListener('click', e => {
+// ── Latest by Language ──
+const _latestLangCache = {};
+let _activeLangTab = 'hi';
+async function loadLatestByLang(lang) {
+  if (_latestLangCache[lang]) {
+    document.getElementById('latest-lang-grid').innerHTML = _latestLangCache[lang]; return;
+  }
+  renderSkeletons('latest-lang-grid', 6);
+  try {
+    const d = await tmdbFetch(`/discover/movie?with_original_language=${lang}&sort_by=primary_release_date.desc&region=IN&vote_count.gte=10`);
+    const html = d.results?.length
+      ? d.results.slice(0, 12).map(m => buildCard(m, null, 'new')).join('')
+      : '<div class="error-state"><p>No results found.</p></div>';
+    _latestLangCache[lang] = html;
+    document.getElementById('latest-lang-grid').innerHTML = html;
+  } catch {
+    document.getElementById('latest-lang-grid').innerHTML = '<div class="error-state"><p>Could not load.</p></div>';
+  }
+}
+document.getElementById('latest-lang-tabs').addEventListener('click', e => {
   const btn = e.target.closest('.tab-btn');
   if (!btn) return;
-  document.querySelectorAll('#regional-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#latest-lang-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  activeRegionalLang = btn.dataset.lang;
-  loadRegional(activeRegionalLang);
+  _activeLangTab = btn.dataset.lang;
+  loadLatestByLang(_activeLangTab);
 });
 
 // ═══════════════════════════════════════════════════════
@@ -2161,7 +2241,7 @@ document.getElementById('regional-tabs').addEventListener('click', e => {
 // ═══════════════════════════════════════════════════════
 const STREAM_SOURCES = [
   { name: 'VidSrc',      hasLang: false, url: (id,l) => `https://vidsrc.me/embed/movie?tmdb=${id}` },
-  { name: 'VidSrc.rip',  hasLang: true,  url: (id,l) => `https://vidsrc.rip/embed/movie?tmdb=${id}${l?'&ds_lang='+l:''}` },
+  { name: 'VidSrc.xyz',  hasLang: false, url: (id,l) => `https://vidsrc.xyz/embed/movie?tmdb=${id}` },
   { name: 'Videasy',     hasLang: false, url: (id,l) => `https://player.videasy.net/movie/${id}` },
   { name: '2Embed',      hasLang: false, url: (id,l) => `https://www.2embed.cc/embed/${id}` },
   { name: 'MoviesAPI',   hasLang: false, url: (id,l) => `https://moviesapi.club/movie/${id}` },
@@ -2169,7 +2249,7 @@ const STREAM_SOURCES = [
 ];
 const TV_STREAM_SOURCES = [
   { name: 'VidSrc',      hasLang: false, url: (id,s,e,l) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
-  { name: 'VidSrc.rip',  hasLang: true,  url: (id,s,e,l) => `https://vidsrc.rip/embed/tv?tmdb=${id}&season=${s}&episode=${e}${l?'&ds_lang='+l:''}` },
+  { name: 'VidSrc.xyz',  hasLang: false, url: (id,s,e,l) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
   { name: 'Videasy',     hasLang: false, url: (id,s,e,l) => `https://player.videasy.net/tv/${id}/${s}/${e}` },
   { name: '2Embed',      hasLang: false, url: (id,s,e,l) => `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` },
   { name: 'MoviesAPI',   hasLang: false, url: (id,s,e,l) => `https://moviesapi.club/tv/${id}-${s}-${e}` },
@@ -2426,8 +2506,8 @@ function loadDemoData() {
     DEMO_MOVIES.slice(6, 12).map(m => buildCard(m, null, 'now')).join('');
   document.getElementById('bollywood-grid').innerHTML =
     hindi.slice(0, 6).map(m => buildCard(m, null, 'lang')).join('');
-  document.getElementById('regional-grid').innerHTML =
-    DEMO_MOVIES.filter(m => m.original_language === 'ta').map(m => buildCard(m, null, 'lang')).join('');
+  document.getElementById('latest-lang-grid').innerHTML =
+    DEMO_MOVIES.filter(m => m.original_language === 'hi').map(m => buildCard(m, null, 'new')).join('');
   document.getElementById('toprated-grid').innerHTML =
     sorted.slice(0, 6).map((m, i) => buildCard(m, i + 1, 'hd')).join('');
   document.getElementById('series-grid').innerHTML =
@@ -2458,7 +2538,7 @@ function buildSeriesCard(show) {
   const lang  = { hi:'Hindi', ta:'Tamil', te:'Telugu', ml:'Malayalam', kn:'Kannada', pa:'Punjabi', bn:'Bengali' }[show.original_language] || show.original_language?.toUpperCase() || '';
   const id    = show.id;
   const thumb = img
-    ? `<img src="${img}" alt="${title}" loading="lazy" onerror="imgError(this)" />`
+    ? `<img src="${img}" alt="${title}" onerror="imgError(this)" />`
     : `<div class="card-thumb-fallback">
          <div class="cf-icon">📺</div>
          <div class="cf-title">${title}</div>
@@ -2642,10 +2722,10 @@ function bootAll() {
   loadTrending();
   loadNowPlaying();
   loadBollywood();
-  loadRegional(activeRegionalLang);
   loadSeriesSection();
   loadTopRated();
   loadMarquee();
+  loadLatestByLang('hi');
 }
 // ── Mobile nav ──
 function toggleMobMenu() {
